@@ -40,6 +40,20 @@ def connect(m, n):
                 return True
     return False
 
+def PageRank(commu, adj_matrix, degree_list, alpha):
+    centrality = {}
+    for i in commu.vertex:
+        centrality[i] = 1/len(commu.vertex)
+    k = 0
+    while k < 1000:
+        for i in commu.vertex:
+            centrality[i] += (1-alpha)/len(commu.vertex)
+            for j in commu.vertex:
+                if adj_matrix[i][j] == 1:
+                    centrality[i] += alpha * (centrality[j]/degree_list[j])
+    k += 1
+    return centrality
+
 
 if __name__ == '__main__':
     edges = []
