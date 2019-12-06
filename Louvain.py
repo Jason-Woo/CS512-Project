@@ -1,10 +1,9 @@
+import csv
+import random
+
 file_name = "./datasets/facebook/facebook_combined.txt"
 d = 4038
-# file_name = "./datasets/test.txt"
-# d = 5
-# file_name = "./datasets/re.txt"
-# d = 194
-
+output_label_cnt = 10
 
 class Community(object):
     def __init__(self, v, degree):
@@ -43,12 +42,15 @@ def connect(m, n):
 
 
 if __name__ == '__main__':
+    edges = []
     adj_matrix = [[0 for col in range(d + 1)] for row in range(d + 1)]
     f = open(file_name)
     for line2 in open(file_name):
         (ele1, ele2) = line2.split()
         adj_matrix[int(ele1)][int(ele2)] = 1
         adj_matrix[int(ele2)][int(ele1)] = 1
+
+        edges.append([int(ele1), int(ele2)])
 
     degree_list = []
     for i in range(d + 1):
@@ -86,11 +88,25 @@ if __name__ == '__main__':
             if new_community[i] != i:
                 community_list.pop(i - del_cnt)
                 del_cnt += 1
-    label = [0 for i in range(d + 1)]
+    label = [[i, 0] for i in range(d + 1)]
     for i in range(len(community_list)):
         for j in range(len(community_list[i].vertex)):
-            label[community_list[i].vertex[j]] = i
-    print(label)
+            label[community_list[i].vertex[j]] = [community_list[i].vertex[j], i]
+    if output_label_cnt > len(community_list):
+        print("ERROR")
+    else:
+        output_label_list = random.sample(range(0, len(community_list) + 1), output_label_cnt)
+
+        with open("edges1.csv", "w", newline="") as datacsv:
+            csvwriter = csv.writer(datacsv, dialect=("excel"))
+            for i in range(len(edges)):
+                if label[edges[i][0]][1] in output_label_list and label[edges[i][1]][1] in output_label_list:
+                    csvwriter.writerow(edges[i])
+        with open("vertex1.csv", "w", newline="") as datacsv:
+            csvwriter = csv.writer(datacsv, dialect=("excel"))
+            for i in range(len(label)):
+                if label[i][1] in output_label_list:
+                    csvwriter.writerow(label[i])
 
 
 
