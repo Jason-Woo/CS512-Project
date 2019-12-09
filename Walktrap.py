@@ -63,8 +63,14 @@ if __name__ == '__main__':
     print("3")
     for i in range(d + 1):
         for j in range(d + 1):
-            delta_sigma = r_2[i][j] / 2
+            delta_sigma[i][j] = r_2[i][j] / (2 * (d + 1))
     print("4")
+
+    with open("walktrap_delta_sigma.csv", "w", newline="") as datacsv:
+        csvwriter = csv.writer(datacsv, dialect=("excel"))
+        for i in range(len(delta_sigma)):
+            csvwriter.writerow(delta_sigma[i])
+
     while len(vertex_list) > cluster_num:
         print(len(vertex_list))
         min_num = 999999
