@@ -5,57 +5,60 @@ file_name = "./datasets/facebook/facebook_combined.txt"
 d = 4038
 output_label_cnt = 10
 
-class Community(object):
-    def __init__(self, v, degree):
-        self.vertex = []
-        self.inner_edges = 0
-        self.total_edges = degree
-        self.vertex.append(v)
 
-    def merge(self, n):
-        self.inner_edges += community_list[n].inner_edges
-        for j in range(len(self.vertex)):
+def louvain(aim_id):
+
+    class Community(object):
+        def __init__(self, v, degree):
+            self.vertex = []
+            self.inner_edges = 0
+            self.total_edges = degree
+            self.vertex.append(v)
+
+        def merge(self, n):
+            self.inner_edges += community_list[n].inner_edges
+            for j in range(len(self.vertex)):
+                for k in range(len(community_list[n].vertex)):
+                    if adj_matrix[self.vertex[j]][community_list[n].vertex[k]] != 0:
+                        self.inner_edges += 1
+            self.total_edges += community_list[n].total_edges
+            self.vertex.extend(community_list[n].vertex)
+
+
+    def cal_delta_q(c, n):
+        k_i_inner = 0
+        for j in range(len(community_list[c].vertex)):
             for k in range(len(community_list[n].vertex)):
-                if adj_matrix[self.vertex[j]][community_list[n].vertex[k]] != 0:
-                    self.inner_edges += 1
-        self.total_edges += community_list[n].total_edges
-        self.vertex.extend(community_list[n].vertex)
+                k_i_inner += adj_matrix[community_list[c].vertex[j]][community_list[n].vertex[k]]
+        k_i_inner *= 2
+        k_i = community_list[n].total_edges - community_list[n].inner_edges
+        tmp_delta_q = (k_i_inner / (2 * degree_sum)) - ((community_list[c].total_edges * k_i) / (2 * pow(degree_sum, 2)))
+        return tmp_delta_q
 
 
-def cal_delta_q(c, n):
-    k_i_inner = 0
-    for j in range(len(community_list[c].vertex)):
-        for k in range(len(community_list[n].vertex)):
-            k_i_inner += adj_matrix[community_list[c].vertex[j]][community_list[n].vertex[k]]
-    k_i_inner *= 2
-    k_i = community_list[n].total_edges - community_list[n].inner_edges
-    tmp_delta_q = (k_i_inner / (2 * degree_sum)) - ((community_list[c].total_edges * k_i) / (2 * pow(degree_sum, 2)))
-    return tmp_delta_q
+    def connect(m, n):
+        for ii in range(len(community_list[m].vertex)):
+            for jj in range(len(community_list[n].vertex)):
+                if adj_matrix[community_list[m].vertex[ii]][community_list[n].vertex[jj]] != 0:
+                    return True
+        return False
 
-
-def connect(m, n):
-    for ii in range(len(community_list[m].vertex)):
-        for jj in range(len(community_list[n].vertex)):
-            if adj_matrix[community_list[m].vertex[ii]][community_list[n].vertex[jj]] != 0:
-                return True
-    return False
-
-def PageRank(commu, adj_matrix, degree_list, alpha):
-    centrality = {}
-    for i in commu.vertex:
-        centrality[i] = 1/len(commu.vertex)
-    k = 0
-    while k < 1000:
+    def PageRank(commu, alpha):
+        centrality = [0 for i in range(max(commu.vertex) + 1)]
         for i in commu.vertex:
-            centrality[i] += (1-alpha)/len(commu.vertex)
-            for j in commu.vertex:
-                if adj_matrix[i][j] == 1:
-                    centrality[i] += alpha * (centrality[j]/degree_list[j])
-    k += 1
-    return centrality
+            centrality[i] = 1/len(commu.vertex)
+        k = 0
+        while k < 1000:
+            if k % 100 == 0:
+                print(k)
+            for i in commu.vertex:
+                centrality[i] += (1-alpha)/len(commu.vertex)
+                for j in commu.vertex:
+                    if adj_matrix[i][j] == 1:
+                        centrality[i] += alpha * (centrality[j]/degree_list[j])
+            k += 1
+        return centrality.index(max(centrality))
 
-
-if __name__ == '__main__':
     edges = []
     adj_matrix = [[0 for col in range(d + 1)] for row in range(d + 1)]
     f = open(file_name)
@@ -106,21 +109,25 @@ if __name__ == '__main__':
     for i in range(len(community_list)):
         for j in range(len(community_list[i].vertex)):
             label[community_list[i].vertex[j]] = [community_list[i].vertex[j], i]
-    if output_label_cnt > len(community_list):
-        print("ERROR")
-    else:
-        output_label_list = random.sample(range(0, len(community_list) + 1), output_label_cnt)
 
-        with open("edges1.csv", "w", newline="") as datacsv:
-            csvwriter = csv.writer(datacsv, dialect=("excel"))
-            for i in range(len(edges)):
-                if label[edges[i][0]][1] in output_label_list and label[edges[i][1]][1] in output_label_list:
-                    csvwriter.writerow(edges[i])
-        with open("vertex1.csv", "w", newline="") as datacsv:
-            csvwriter = csv.writer(datacsv, dialect=("excel"))
-            for i in range(len(label)):
-                if label[i][1] in output_label_list:
-                    csvwriter.writerow(label[i])
+    clu_center = PageRank(community_list[label[aim_id][1]], 0.85)
+
+    return label, edges, clu_center
+    # if output_label_cnt > len(community_list):
+    #     print("ERROR")
+    # else:
+    #     output_label_list = random.sample(range(0, len(community_list) + 1), output_label_cnt)
+    #
+    #     with open("edges1.csv", "w", newline="") as datacsv:
+    #         csvwriter = csv.writer(datacsv, dialect=("excel"))
+    #         for i in range(len(edges)):
+    #             if label[edges[i][0]][1] in output_label_list and label[edges[i][1]][1] in output_label_list:
+    #                 csvwriter.writerow(edges[i])
+    #     with open("vertex1.csv", "w", newline="") as datacsv:
+    #         csvwriter = csv.writer(datacsv, dialect=("excel"))
+    #         for i in range(len(label)):
+    #             if label[i][1] in output_label_list:
+    #                 csvwriter.writerow(label[i])
 
 
 
