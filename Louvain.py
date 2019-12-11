@@ -49,8 +49,8 @@ def louvain(aim_id):
             centrality[i] = 1/len(commu.vertex)
         k = 0
         while k < 1000:
-            if k % 100 == 0:
-                print(k)
+            # if k % 100 == 0:
+                # print(k)
             for i in commu.vertex:
                 centrality[i] += (1-alpha)/len(commu.vertex)
                 for j in commu.vertex:
