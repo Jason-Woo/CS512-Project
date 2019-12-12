@@ -53,7 +53,7 @@ if __name__ == '__main__':
     info = Info(d)
     window = tk.Tk()
     window.title('Community detection')
-    window.geometry('700x680')
+    window.geometry('700x650')
 
     var = tk.StringVar()
 
@@ -66,7 +66,10 @@ if __name__ == '__main__':
         info.set_id(e.get())
         error_handling(info.check_error())
         if info.check_error() == 4:
-            label, edges, center = louvain(int(info.id))
+            if info.method == 'Louvain':
+                label, edges, center = louvain(int(info.id))
+            else:
+                label, edges, center = louvain(int(info.id))
             aim_cluster = label[int(info.id)][1]
             aim_community = []
             aim_edges = []
@@ -107,11 +110,11 @@ if __name__ == '__main__':
     fml3 = tk.Frame(window)
     fml3.pack()
     b1 = tk.Button(fml3, text="Run Algorithm", width=15, height=1, command=button_click1).pack(side='left', padx=10, pady=3)
-    b2 = tk.Button(fml3, text="Update Information", width=15, height=1, command=update_canvas).pack(side='left', padx=10, pady=3)
+    b2 = tk.Button(fml3, text="Update Information", width=18, height=1, command=update_canvas).pack(side='left', padx=10, pady=3)
 
     fml4 = tk.Frame(window)
     fml4.pack(pady=10)
-    l3 = tk.Label(fml4, text='Id of center point is ' + str(info.center), font=('Arial', 10), height=1)
+    l3 = tk.Label(fml4, text='ID of center point is ' + str(info.center), font=('Arial', 10), height=1)
     l3.pack(side='top')
 
     l4 = tk.Label(fml4, text='It\'s neighbor take part of ' + str(round(info.degree)) + '% of the vertices, Maximum depth is '+ str(info.depth), font=('Arial', 10), height=1)
