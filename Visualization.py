@@ -14,6 +14,7 @@ def show_img(edges, size, center, user):
     node_color[user] = 'blue'
     nx.draw(g, node_color=[node_color[v] for v in g], node_size=[node_size[v] for v in g], linecolor='gray', linewidths=0, width=0.1)
     plt.savefig('tmp.png')
+    plt.clf()
     distance = nx.dijkstra_predecessor_and_distance(g, center)[1]
     return max(distance.values()), (g.degree[center]/len(distance))*100
 
