@@ -1,6 +1,7 @@
 import csv
 import random
 import numpy as np
+import os
 
 file_name = "./datasets/facebook/facebook_combined.txt"
 d = 4038
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     p = np.zeros((d + 1, d + 1))
     r = np.zeros((d + 1, d + 1))
     delta_sigma = np.zeros((d + 1, d + 1))
-    print("0")
+
     community_list = []
     vertex_list = []
     for i in range(d + 1):
@@ -47,29 +48,31 @@ if __name__ == '__main__':
         vertex_list.append(i)
         for j in range(d + 1):
             p[i][j] = adj_matrix[i][j] / degree_list[i]
-    print("1")
-    p_to_k = np.ones((d + 1, d + 1))
-    for i in range(k):
-        p_to_k = np.dot(p_to_k, p)
-    print("2")
-    for i in range(d + 1):
-        for j in range(d + 1):
-            r_ij = 0
-            for m in range(d + 1):
-                r_ij += pow(p_to_k[i][m] - p_to_k[j][m], 2) / degree_list[m]
-            r[i][j] = np.sqrt(r_ij)
-        print(i)
-    r_2 = np.dot(r, r)
-    print("3")
-    for i in range(d + 1):
-        for j in range(d + 1):
-            delta_sigma[i][j] = r_2[i][j] / (2 * (d + 1))
-    print("4")
+    if os.path.exists("./datasets/facebook/walktrap_delta_sigma.csv"):
+        for i in range(d + 1):
+            for j in range(d + 1):
+                delta_sigma[i][j] = 0
+    else:
+        p_to_k = np.ones((d + 1, d + 1))
+        for i in range(k):
+            p_to_k = np.dot(p_to_k, p)
 
-    with open("walktrap_delta_sigma.csv", "w", newline="") as datacsv:
-        csvwriter = csv.writer(datacsv, dialect=("excel"))
-        for i in range(len(delta_sigma)):
-            csvwriter.writerow(delta_sigma[i])
+        for i in range(d + 1):
+            for j in range(d + 1):
+                r_ij = 0
+                for m in range(d + 1):
+                    r_ij += pow(p_to_k[i][m] - p_to_k[j][m], 2) / degree_list[m]
+                print(r_ij)
+                r[i][j] = np.sqrt(r_ij)
+        r_2 = np.dot(r, r)
+        for i in range(d + 1):
+            for j in range(d + 1):
+                delta_sigma[i][j] = r_2[i][j] / (2 * (d + 1))
+
+        with open("walktrap_delta_sigma.csv", "w", newline="") as datacsv:
+            csvwriter = csv.writer(datacsv, dialect=("excel"))
+            for i in range(len(delta_sigma)):
+                csvwriter.writerow(delta_sigma[i])
 
     while len(vertex_list) > cluster_num:
         print(len(vertex_list))
@@ -77,7 +80,7 @@ if __name__ == '__main__':
         min_index = [-1, -1]
         for i in range(len(delta_sigma)):
             for j in range(len(delta_sigma)):
-                if i in vertex_list and j in vertex_list and delta_sigma[i][j] < min_num:
+                if i in vertex_list and j in vertex_list and i != j and delta_sigma[i][j] < min_num:
                     min_num = delta_sigma[i][j]
                     min_index = [i, j]
         print(min_index)
@@ -95,8 +98,8 @@ if __name__ == '__main__':
         for i in range(len(delta_sigma)):
             c = community_list[i].get_degree()
             new_delta_q = (c1 + c) * delta_sigma[min_index[0]][i] + (c2 + c) * delta_sigma[min_index[1]][i] - c * delta_sigma[min_index[0]][min_index[1]]
-            new_delta_q1[i][1] = new_delta_q
-            new_delta_q2[1][i] = new_delta_q
+            new_delta_q1[i][0] = new_delta_q
+            new_delta_q2[0][i] = new_delta_q
         delta_sigma = np.append(delta_sigma, new_delta_q1, axis=1)
         delta_sigma = np.append(delta_sigma, new_delta_q2, axis=0)
 
